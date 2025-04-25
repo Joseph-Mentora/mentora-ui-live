@@ -10,10 +10,15 @@ const languageOptions = [
   { code: 'he', label: '🇮🇱 עברית' }
 ];
 
+const gradeOptions = ['Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const subjectOptions = ['Math', 'Science', 'English', 'History', 'Geography', 'Art', 'Technology'];
+
 export default function MentoraChatbot() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [lang, setLang] = useState('en');
+  const [grade, setGrade] = useState('Kindergarten');
+  const [subject, setSubject] = useState('Math');
 
   const handleAsk = async () => {
     if (!question.trim()) return;
@@ -23,7 +28,7 @@ export default function MentoraChatbot() {
       const response = await fetch('https://mentora-backend.onrender.com/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
+        body: JSON.stringify({ question, grade, subject })
       });
       const data = await response.json();
       setAnswer(data.answer || 'No answer returned.');
@@ -35,19 +40,31 @@ export default function MentoraChatbot() {
   const t = translations[lang];
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial', maxWidth: '700px', margin: 'auto' }}>
+    <div style={{ padding: '2rem', fontFamily: 'Arial', maxWidth: '750px', margin: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>{t.header}</h1>
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value)}
-          style={{ fontSize: '1rem', padding: '5px' }}
-        >
-          {languageOptions.map((opt) => (
+        <select value={lang} onChange={(e) => setLang(e.target.value)} style={{ fontSize: '1rem', padding: '5px' }}>
+          {languageOptions.map(opt => (
             <option key={opt.code} value={opt.code}>{opt.label}</option>
           ))}
         </select>
       </div>
+
+      <div style={{ margin: '1rem 0', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <label>
+          <strong>Grade:</strong>
+          <select value={grade} onChange={(e) => setGrade(e.target.value)} style={{ marginLeft: '10px' }}>
+            {gradeOptions.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </label>
+        <label>
+          <strong>Subject:</strong>
+          <select value={subject} onChange={(e) => setSubject(e.target.value)} style={{ marginLeft: '10px' }}>
+            {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+      </div>
+
       <input
         type="text"
         value={question}
