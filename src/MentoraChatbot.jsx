@@ -1,86 +1,102 @@
-
-import React, { useState } from 'react';
-import translations from './translations';
-
-const languageOptions = [
-  { code: 'en', label: '🇬🇧 English' },
-  { code: 'es', label: '🇪🇸 Español' },
-  { code: 'fr', label: '🇫🇷 Français' },
-  { code: 'ru', label: '🇷🇺 Русский' },
-  { code: 'he', label: '🇮🇱 עברית' }
-];
-
-const gradeOptions = ['Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
-const subjectOptions = ['Math', 'Science', 'English', 'History', 'Geography', 'Art', 'Technology'];
+import { useState } from "react";
 
 export default function MentoraChatbot() {
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState('');
-  const [lang, setLang] = useState('en');
-  const [grade, setGrade] = useState('Kindergarten');
-  const [subject, setSubject] = useState('Math');
+  const [grade, setGrade] = useState("K");
+  const [subject, setSubject] = useState("English");
+  const [question, setQuestion] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setResponse("");
 
-    setAnswer('Thinking...');
     try {
-      const response = await fetch('https://mentora-backend.onrender.com/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, grade, subject })
+      const res = await fetch("https://mentora-backend.onrender.com/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          grade: grade === "K" ? 0 : parseInt(grade),
+          subject,
+          question,
+        }),
       });
-      const data = await response.json();
-      setAnswer(data.answer || 'No answer returned.');
+
+      const data = await res.json();
+      if (data.answer) {
+        setResponse(data.answer);
+      } else {
+        setResponse("Hmm, I’m not sure how to answer that yet — can you try asking another way?");
+      }
     } catch (error) {
-      setAnswer('Error fetching answer.');
+      setResponse("There was an error reaching Mentora. Please try again later.");
     }
+
+    setLoading(false);
   };
 
-  const t = translations[lang];
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial', maxWidth: '750px', margin: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>{t.header}</h1>
-        <select value={lang} onChange={(e) => setLang(e.target.value)} style={{ fontSize: '1rem', padding: '5px' }}>
-          {languageOptions.map(opt => (
-            <option key={opt.code} value={opt.code}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
+    <div className="chatbot-container">
+      <h1>Mentora: Your AI Study Buddy</h1>
 
-      <div style={{ margin: '1rem 0', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <form onSubmit={handleSubmit}>
         <label>
-          <strong>Grade:</strong>
-          <select value={grade} onChange={(e) => setGrade(e.target.value)} style={{ marginLeft: '10px' }}>
-            {gradeOptions.map(g => <option key={g} value={g}>{g}</option>)}
+          Grade:
+          <select value={grade} onChange={(e) => setGrade(e.target.value)}>
+            <option value="K">Kindergarten</option>
+            <option value="1">Grade 1</option>
+            <option value="2">Grade 2</option>
+            <option value="3">Grade 3</option>
+            <option value="4">Grade 4</option>
+            <option value="5">Grade 5</option>
+            <option value="6">Grade 6</option>
+            <option value="7">Grade 7</option>
+            <option value="8">Grade 8</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
           </select>
         </label>
+
         <label>
-          <strong>Subject:</strong>
-          <select value={subject} onChange={(e) => setSubject(e.target.value)} style={{ marginLeft: '10px' }}>
-            {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+          Subject:
+          <select value={subject} onChange={(e) => setSubject(e.target.value)}>
+            <option>English</option>
+            <option>Math</option>
+            <option>Science</option>
+            <option>Social Studies</option>
+            <option>Geography</option>
+            <option>History</option>
+            <option>Art</option>
           </select>
         </label>
-      </div>
 
-      <input
-        type="text"
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        placeholder={t.placeholder}
-        style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-      />
-      <button
-        onClick={handleAsk}
-        style={{ marginTop: '1rem', padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
-      >
-        {t.ask}
-      </button>
-      <div style={{ marginTop: '2rem', fontSize: '18px', minHeight: '100px', backgroundColor: '#f9f9f9', padding: '1rem', borderRadius: '8px' }}>
-        <strong>Answer:</strong> <br />{answer}
-      </div>
+        <label>
+          Question:
+          <textarea
+            rows="3"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Type your question here..."
+            required
+          />
+        </label>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Thinking..." : "Ask Mentora"}
+        </button>
+      </form>
+
+      {response && (
+        <div className="response-box">
+          <h3>Mentora says:</h3>
+          <p>{response}</p>
+        </div>
+      )}
     </div>
   );
 }
